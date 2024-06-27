@@ -9,7 +9,6 @@ namespace c__z9_webAPI
     {
         public static IActionResult WorkWithString(string stroka, int choice)
         {
-            bool isValid = true;
             JObject keyValuePairs = new JObject();
             foreach (char ch in stroka)
             {
@@ -26,84 +25,80 @@ namespace c__z9_webAPI
                 return new JsonResult(error) { StatusCode = 400 };
             }
 
-            if (isValid)
+            
+            if (stroka.Length % 2 == 0)
             {
-                Dictionary<char, int> freq = new Dictionary<char, int>();
+                stroka = perevorot(stroka[..(stroka.Length / 2)]) + perevorot(stroka.Substring(stroka.Length / 2));
+            }
+            else
+            {
+                stroka = perevorot(stroka) + stroka;
+            }
+            keyValuePairs.Add("ProcessedString", stroka);
 
-                if (stroka.Length % 2 == 0)
-                {
-                    stroka = perevorot(stroka[..(stroka.Length / 2)]) + perevorot(stroka.Substring(stroka.Length / 2));
-                }
+            Dictionary<char, int> freq = new Dictionary<char, int>();
+            foreach (char ch in stroka)
+            {
+                if (freq.ContainsKey(ch))
+                    freq[ch]++;
                 else
-                {
-                    stroka = perevorot(stroka) + stroka;
-                }
-                keyValuePairs.Add("ProcessedString", stroka);
-
-                foreach (char ch in stroka)
-                {
-                    if (freq.ContainsKey(ch))
-                        freq[ch]++;
-                    else
-                        freq[ch] = 1;
-                }
-                JArray json_array = new JArray();
-                foreach (KeyValuePair<char, int> kvp in freq)
-                {
-                    json_array.Add($"{kvp.Key} - {kvp.Value}");
-                }
-                keyValuePairs.Add("values", json_array);
-
-                char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'y' };
-                int firstIndex = stroka.IndexOfAny(vowels);
-                int lastIndex = stroka.LastIndexOfAny(vowels);
-                // Проверка существования подстроки
-                if (firstIndex == -1 || lastIndex == -1)
-                {
-                    keyValuePairs.Add("vowels_substring", "Подстрока, которая начинается и заканчивается на гласную, не найдена");
-                }
-                else
-                {
-                    string substring = stroka.Substring(firstIndex, lastIndex - firstIndex + 1);
-                    keyValuePairs.Add("vowels_substring", substring);
-                }
+                    freq[ch] = 1;
+            }
+            JArray json_array = new JArray();
+            foreach (KeyValuePair<char, int> kvp in freq)
+            {
+                json_array.Add($"{kvp.Key} - {kvp.Value}");
+            }
+            keyValuePairs.Add("values", json_array);
 
 
-                // Выбор алгоритма сортировки
-                switch (choice)
-                {
-                    case 1:
-                        string sortedString = QuickSort.SortString(stroka);
-                        keyValuePairs.Add("sorted_string", sortedString);
-                        break;
-
-                    case 2:
-                        BinaryTree tree = new BinaryTree();
-                        string bb = stroka;
-                        foreach (char bukva in bb)
-                        {
-                            tree.Insert(bukva);
-                        }
-                        keyValuePairs.Add("sorted_string", tree.PrintInOrder().ToString());
-                        break;
-
-                    default:
-                        keyValuePairs.Add("sorted_string", "Неверный выбор алгоритма.");
-                        break;
-                }
-
-                // API 
-                keyValuePairs.Add("string_API", API_Async(stroka).Result.ToString());
+            char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'y' };
+            int firstIndex = stroka.IndexOfAny(vowels);
+            int lastIndex = stroka.LastIndexOfAny(vowels);
+            // Проверка существования подстроки
+            if (firstIndex == -1 || lastIndex == -1)
+            {
+                keyValuePairs.Add("vowels_substring", "Подстрока, которая начинается и заканчивается на гласную, не найдена");
+            }
+            else
+            {
+                string substring = stroka.Substring(firstIndex, lastIndex - firstIndex + 1);
+                keyValuePairs.Add("vowels_substring", substring);
             }
 
-            static string perevorot(string message)
+
+            // Выбор алгоритма сортировки
+            switch (choice)
             {
-                string hc = "";
-                foreach (var ch in message)
-                {
-                    hc = ch + hc;
-                }
-                return hc;
+                case 1:
+                    string sortedString = QuickSort.SortString(stroka);
+                    keyValuePairs.Add("sorted_string", sortedString);
+                    break;
+
+                case 2:
+                    BinaryTree tree = new BinaryTree();
+                    string bb = stroka;
+                    foreach (char bukva in bb)
+                    {
+                        tree.Insert(bukva);
+                    }
+                    keyValuePairs.Add("sorted_string", tree.PrintInOrder().ToString());
+                    break;
+
+                default:
+                    keyValuePairs.Add("sorted_string", "Неверный выбор алгоритма.");
+                    break;
+            }
+
+            // API 
+            keyValuePairs.Add("string_API", API_Async(stroka).Result.ToString());
+
+
+            static string perevorot(string originalString)
+            {
+                string reversedString = new string(originalString.Reverse().ToArray());
+                return reversedString;
+
             }
             return new OkObjectResult(keyValuePairs.ToString());
         }
